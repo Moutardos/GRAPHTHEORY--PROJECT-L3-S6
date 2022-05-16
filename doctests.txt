@@ -1,0 +1,78 @@
+Tests pour le projet d'algorithmique des graphes (décongestion, 2022)
+=====================================================================
+
+Méthode puits et source
+
+>>> from graphe import Graphe; G = Graphe();
+>>> for u, v, c in [('s', 'a', 4), ('s', 'b', 4), ('a', 'd', 1), ('a', 'c', 3), ('b', 'c', 3), ('b', 'e', 1), ('c', 't', 2), ('d', 't', 2), ('e', 't', 4)]:
+...     G.ajouter_arc(u, v, c)
+>>> G.puits()
+{'t'}
+>>> G.sources()
+{'s'}
+
+Calcul d'un flot maximum sur le graphe de l'énoncé. On ne vérifie que la 
+valeur, puisque la solution optimale n'est pas nécessairement unique.
+
+
+>>> from graphe import Graphe; G = Graphe(); from decongestion import flot_maximum
+>>> for u, v, c in [('s', 'a', 4), ('s', 'b', 4), ('a', 'd', 1), ('a', 'c', 3), ('b', 'c', 3), ('b', 'e', 1), ('c', 't', 2), ('d', 't', 2), ('e', 't', 4)]:
+...     G.ajouter_arc(u, v, c)
+>>> valeur, _ = flot_maximum(G)
+>>> valeur
+4
+
+Calcul d'un résiduel à partir d'un réseau et d'un flot donnés. Exemple de 
+l'énoncé.
+
+>>> from graphe import Graphe; G = Graphe(); from decongestion import flot_maximum, reseau_residuel
+>>> for u, v, c in [('s', 'a', 4), ('s', 'b', 4), ('a', 'd', 1), ('a', 'c', 3), ('b', 'c', 3), ('b', 'e', 1), ('c', 't', 2), ('d', 't', 2), ('e', 't', 4)]:
+...     G.ajouter_arc(u, v, c)
+>>> flot = {('s', 'a'): 2, ('s', 'b'): 2, ('a', 'd'): 1, ('a', 'c'): 1, ('b', 'c'): 1, ('b', 'e'): 1, ('c', 't'): 2, ('d', 't'): 1, ('e', 't'): 1}
+>>> residuel = reseau_residuel(G, flot)
+>>> sorted(residuel.arcs())
+[('a', 'c', 2), ('a', 's', 2), ('b', 'c', 2), ('b', 's', 2), ('c', 'a', 1), ('c', 'b', 1), ('d', 'a', 1), ('d', 't', 1), ('e', 'b', 1), ('e', 't', 3), ('s', 'a', 2), ('s', 'b', 2), ('t', 'c', 2), ('t', 'd', 1), ('t', 'e', 1)]
+
+Calcul d'une coupe minimum à partir d'un réseau résiduel et d'un flot max donnés.
+
+>>> from graphe import Graphe; G = Graphe(); from decongestion import coupe_minimum, flot_maximum, reseau_residuel
+>>> for sommet, coordonnees in [("s", (0, 0)), ("a", (1.5, 1)), ("b", (1.5, -1)),("c", (3, 0)), ("d", (4.5, 1)), ("e", (4.5, -1)), ("t", (6, 0))]:
+...		G.ajouter_sommet(sommet, coords=coordonnees)
+>>> for u, v, c in [('s', 'a', 4), ('s', 'b', 4), ('a', 'd', 1), ('a', 'c', 3), ('b', 'c', 3), ('b', 'e', 1), ('c', 't', 2), ('d', 't', 2), ('e', 't', 4)]:
+...     G.ajouter_arc(u, v, c)
+>>> flot = {('s', 'a'): 2, ('s', 'b'): 2, ('a', 'd'): 1, ('a', 'c'): 1, ('b', 'c'): 1, ('b', 'e'): 1, ('c', 't'): 2, ('d', 't'): 1, ('e', 't'): 1}
+>>> residuel = reseau_residuel(G, flot)
+>>> tuple(map(sorted, coupe_minimum(residuel, G.sources())))
+(['a', 'b', 'c', 's'], ['d', 'e', 't'])
+
+Renvoie les augmentations utiles du graphe avec son flot_maximum precedement calculé
+
+>>> from graphe import Graphe; G = Graphe(); from decongestion import augmentations_uniques_utiles
+>>> for u, v, c in [('s', 'a', 4), ('s', 'b', 4), ('a', 'd', 1), ('a', 'c', 3), ('b','c', 3), ('b', 'e', 1), ('c', 't', 2), ('d', 't', 2), ('e', 't', 4)]:
+...		G.ajouter_arc(u, v, capacite=c)
+>>> flot = {('s', 'a'): 2, ('s', 'b'): 2, ('a', 'd'): 1, ('a', 'c'): 1, ('b', 'c'): 1, ('b', 'e'): 1, ('c', 't'): 2, ('d', 't'): 1, ('e', 't'): 1}
+>>> sorted(augmentations_uniques_utiles(G, flot))
+[('a', 'd'), ('b', 'e'), ('c', 't')]
+
+Renvoie les augmentations utiles et la capacité max utile
+
+>>> from graphe import Graphe; G = Graphe(); from decongestion import augmentations_uniques_utiles_calibrees
+>>> for u, v, c in [('s', 'a', 4), ('s', 'b', 4), ('a', 'd', 1), ('a', 'c', 3), ('b','c', 3), ('b', 'e', 1), ('c', 't', 2), ('d', 't', 2), ('e', 't', 4)]:
+...		G.ajouter_arc(u, v, capacite=c)
+>>> flot = {('s', 'a'): 2, ('s', 'b'): 2, ('a', 'd'): 1, ('a', 'c'): 1, ('b', 'c'): 1, ('b', 'e'): 1, ('c', 't'): 2, ('d', 't'): 1, ('e', 't'): 1}
+>>> sorted(augmentations_uniques_utiles_calibrees(G, flot).items()) 
+[(('a', 'd'), 1), (('b', 'e'), 3), (('c', 't'), 4)]
+
+>>> from graphe import Graphe; G = Graphe(); from decongestion import ensemble_minimum_augmentations_utiles_calibrees
+>>> for u, v, c in [('s', 'a', 4), ('s', 'b', 4), ('a', 'd', 1), ('a', 'c', 3), ('b','c', 3), ('b', 'e', 1), ('c', 't', 2), ('d', 't', 2), ('e', 't', 4)]:
+... 	G.ajouter_arc(u, v, capacite=c)
+>>> flot = {('s', 'a'): 2, ('s', 'b'): 2, ('a', 'd'): 1, ('a', 'c'): 1, ('b', 'c'): 1,('b', 'e'): 1, ('c', 't'): 2, ('d', 't'): 1, ('e', 't'): 1}
+>>> sorted(ensemble_minimum_augmentations_utiles_calibrees(G, flot, 1).items()) 
+[(('a', 'd'), 2)]
+>>> sorted(ensemble_minimum_augmentations_utiles_calibrees(G, flot, 3).items()) 
+[(('b', 'e'), 4)]
+>>> sorted(ensemble_minimum_augmentations_utiles_calibrees(G, flot, 5).items()) 
+[(('a', 'd'), 2), (('c', 't'), 6), (('s', 'a'), 5)]
+>>> sorted(ensemble_minimum_augmentations_utiles_calibrees(G, flot, 8).items()) 
+[(('a', 'd'), 2), (('b', 'e'), 4), (('c', 't'), 6), (('s', 'a'), 5), (('s', 'b'), 7)]
+
